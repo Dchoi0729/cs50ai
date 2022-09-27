@@ -4,6 +4,12 @@ class Node():
         self.parent = parent
         self.action = action
 
+    def __hash__(self):
+        return hash((self.state, self.parent, self.action))
+
+    def __eq__(self, other_node):
+        return hash(self) == hash(other_node)
+
 
 class StackFrontier():
     def __init__(self):
