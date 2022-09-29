@@ -70,7 +70,6 @@ def main():
         sys.exit("Person not found.")
 
     path = shortest_path(source, target)
-
     if path is None:
         print("Not connected.")
     else:
@@ -91,42 +90,50 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    # Create frontier and explored set
+
+    # Initialize queue and explored set with source node
     frontier = QueueFrontier()
     explored_set = set()
-
     source = Node(source, None, None)
     frontier.add(source)
     explored_set.add(source)
 
-    # Optimize this
     while True:
+        # No connection
         if frontier.empty():
-            return None
-        
-        curr_node = frontier.remove()
-        if curr_node.state == target:
-            answer_list = []
-            
-            node = curr_node
-            while True:
-                if node.parent == None:
-                    break
-                answer_list.append((curr_node.action, curr_node.state))
-                node = node.parent
-            
             break
         
+        curr_node = frontier.remove()
         explored_set.add(curr_node)
 
-        expand_list = set()
+        # For all adjacent nodes
         for pair in neighbors_for_person(curr_node.state):
             new_node = Node(pair[1], curr_node, pair[0])
+            if new_node.state == target:
+                return generate_answer(new_node)
             if new_node not in explored_set and not frontier.contains_state(new_node.state):
                 frontier.add(new_node)
                 explored_set.add(new_node)
+    
+    return None
 
-    return answer_list
+
+def generate_answer(node):
+    """
+    Returns a list with (a,s) pairs in correct order
+    from source node to given node
+    """
+    answer = []
+    crawler = node
+    while True:
+        if crawler.parent == None:
+            break
+        answer.append((crawler.action,crawler.state))
+        crawler = crawler.parent
+    
+    answer.reverse()
+
+    return answer
 
 
 def person_id_for_name(name):

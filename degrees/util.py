@@ -5,7 +5,9 @@ class Node():
         self.action = action
 
     def __hash__(self):
-        return hash((self.state, self.parent, self.action))
+        parent_state = self.parent.state if not self.parent == None else None 
+
+        return hash((self.state, parent_state, self.action))
 
     def __eq__(self, other_node):
         return hash(self) == hash(other_node)
