@@ -5,5 +5,5 @@ ports:
   - port: 6080
     onOpen: open-preview
 tasks:
-  - init: pip3 install -r requirements.txt
-    command: python runner.py
+  - init: pip3 install -r tictactoe/requirements.txt
+    command: python tictactoe/runner.py
