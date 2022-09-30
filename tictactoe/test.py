@@ -6,9 +6,9 @@ O = "O"
 EMPTY = None
 
 
-board = [[O, O, X],
-            [X, O, O],
-            [X, X, O]]
+board = [[EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY],
+            [EMPTY, EMPTY, EMPTY]]
 print(tictactoe.player(board))
 
 print(len(board))
@@ -22,7 +22,8 @@ print(board)
 
 #print(tictactoe.result(board, (0,3)))
 
-a = ['X', 'O', 'X']
-print(len(set(a)))
 
 print(tictactoe.winner(board))
+print(tictactoe.terminal(board))
+print(tictactoe.utility(board))
+print(tictactoe.minimax(board))

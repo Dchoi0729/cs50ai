@@ -82,7 +82,7 @@ def winner(board):
 
     
     # Check diagonal /
-    diagonal_winner, i, j = board[2][0], 2, 0
+    diagonal_winner, i, j = board[len(board)-1][0], len(board)-1, 0
     while True:
         if i < 0 or j > len(board[0]) - 1:
             return diagonal_winner  
@@ -98,18 +98,67 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    raise NotImplementedError
+
+    if not winner(board) == None:
+       return True
+    
+    for row in board:
+        for entry in row:
+            if entry == EMPTY:
+                return False
+    
+    return True
 
 
 def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    raise NotImplementedError
+    if winner(board) == X:
+        return 1
+    elif winner(board) == O:
+        return -1
+    else:
+        return 0
 
 
 def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    raise NotImplementedError
+    optimal_action = None
+    if player(board) == X:
+        max_val = -2
+        for action in actions(board):
+            utility = minvalue(result(board,action))
+            if utility > max_val:
+                max_val = utility
+                optimal_action = action 
+        return optimal_action
+    
+    min_val = 2
+    for action in actions(board):
+        utility = maxvalue(result(board,action))
+        if utility < min_val:
+            min_val = utility
+            optimal_action = action 
+
+    return optimal_action
+
+
+def maxvalue(board):
+    if terminal(board):
+        return utility(board)
+    util = -2
+    for action in actions(board):
+        util = max(util, minvalue(result(board, action)))
+    return util
+
+
+def minvalue(board):
+    if terminal(board):
+        return utility(board)
+    util = 2
+    for action in actions(board):
+        util = min(util, maxvalue(result(board, action)))
+    return util
