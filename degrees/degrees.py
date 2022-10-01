@@ -128,7 +128,7 @@ def generate_answer(node):
     while True:
         if crawler.parent == None:
             break
-        answer.append((crawler.action,crawler.state))
+        answer.append((crawler.action, crawler.state))
         crawler = crawler.parent
     
     answer.reverse()
