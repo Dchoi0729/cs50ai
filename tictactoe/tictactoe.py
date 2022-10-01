@@ -40,9 +40,10 @@ def actions(board):
     for i in range(len(board)):
         for j in range(len(board[0])):
             if board[i][j] == EMPTY:
-                allowed_moves.append((i,j))
+                allowed_moves.append((i, j))
 
     return allowed_moves
+
 
 def result(board, action):
     """
@@ -54,6 +55,7 @@ def result(board, action):
     result_board[action[0]][action[1]] = player(board)
 
     return result_board
+
 
 def winner(board):
     """
@@ -80,7 +82,6 @@ def winner(board):
         i += 1
         j += 1
 
-    
     # Check diagonal /
     diagonal_winner, i, j = board[len(board)-1][0], len(board)-1, 0
     while True:
@@ -100,7 +101,7 @@ def terminal(board):
     """
 
     if not winner(board) == None:
-       return True
+        return True
     
     for row in board:
         for entry in row:
@@ -131,14 +132,14 @@ def minimax(board):
     min_val = 2
     if player(board) == X:
         for action in actions(board):
-            utility = minvalue(result(board,action), max_val, min_val)
+            utility = minvalue(result(board, action), max_val, min_val)
             if utility > max_val:
                 max_val = utility
                 optimal_action = action 
         return optimal_action
     
     for action in actions(board):
-        utility = maxvalue(result(board,action), max_val, min_val)
+        utility = maxvalue(result(board, action), max_val, min_val)
         if utility < min_val:
             min_val = utility
             optimal_action = action 
@@ -146,6 +147,9 @@ def minimax(board):
 
 
 def maxvalue(board, alpha, beta):
+    """
+    Returns the max value of board possible given a minimizing opponent
+    """
     if terminal(board):
         return utility(board)
     for action in actions(board):
@@ -156,6 +160,9 @@ def maxvalue(board, alpha, beta):
 
 
 def minvalue(board, alpha, beta):
+    """
+    Returns the min value of board possible given a maximizing opponent
+    """
     if terminal(board):
         return utility(board)
     for action in actions(board):
