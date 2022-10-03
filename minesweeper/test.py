@@ -30,32 +30,25 @@ class Tests(unittest.TestCase):
         sentence = Sentence(["A", "B", "C"], 2)
         sentence.mark_safe("A")
         self.assertEqual(Sentence(["B", "C"], 2), sentence)
-
     
     def test_add_knowledge(self):
         """ Check add_knowledge"""
         ai = MinesweeperAI(height=3, width=3)
-        ai.add_knowledge((0,0), 1)
-        ai.add_knowledge((0,1), 1)
-        ai.add_knowledge((0,2), 1)
-        ai.add_knowledge((2,1), 2)
-        self.assertEqual(ai.mines, {(1,1)})
+        ai.add_knowledge((0, 0), 1)
+        ai.add_knowledge((0, 1), 1)
+        ai.add_knowledge((0, 2), 1)
+        ai.add_knowledge((2, 1), 2)
+        self.assertEqual(ai.mines, {(1, 1)})
     
     def test_make_safe_move(self):
         """ Check make_safe_move """
         ai = MinesweeperAI(height=3, width=3)
-        ai.add_knowledge((0,0), 1)
-        ai.add_knowledge((0,1), 1)
-        ai.add_knowledge((0,2), 1)
-        ai.add_knowledge((2,1), 2)
-        self.assertIn(ai.make_safe_move(), {(1,0),(1,2)})
+        ai.add_knowledge((0, 0), 1)
+        ai.add_knowledge((0, 1), 1)
+        ai.add_knowledge((0, 2), 1)
+        ai.add_knowledge((2, 1), 2)
+        self.assertIn(ai.make_safe_move(), {(1, 0),(1, 2)})
     
 
-
 if __name__ == "__main__":
-    a ={1,2, 3}
-    b =[2,3,5,4]
-    print(a-b)
-    #c= set([(i,j) for i in range(8) for j in range(8)])
-    print(c)
     unittest.main()

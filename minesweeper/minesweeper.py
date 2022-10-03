@@ -125,7 +125,6 @@ class Sentence():
             self.cells.remove(cell)
             self.count -= 1
 
-
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
@@ -209,9 +208,9 @@ class MinesweeperAI():
                     if (i, j) in self.mines:
                         count -= 1
                     if not (i, j) in self.mines and not (i, j) in self.safes:
-                        neighboring_cells.append((i,j))
+                        neighboring_cells.append((i, j))
                         
-        self.knowledge.append(Sentence(neighboring_cells,count))
+        self.knowledge.append(Sentence(neighboring_cells, count))
 
         # Helper method that makes new inferences based on knowledge base and updates it
         # Returns true if a new inference has been made
@@ -220,7 +219,7 @@ class MinesweeperAI():
             for sentence in self.knowledge:
                 for other in self.knowledge:
                     if other.cells.issubset(sentence.cells) and not sentence == other:
-                        new_sentence = Sentence(sentence.cells-other.cells,sentence.count-other.count)
+                        new_sentence = Sentence(sentence.cells-other.cells, sentence.count-other.count)
                         if new_sentence not in self.knowledge:
                             self.knowledge.append(new_sentence)
                             changed = True
@@ -238,7 +237,6 @@ class MinesweeperAI():
             
             if not make_new_inference():
                 break
-        
 
     def make_safe_move(self):
         """
@@ -252,7 +250,6 @@ class MinesweeperAI():
         available_moves = self.safes - self.moves_made
         return None if len(available_moves) == 0 else available_moves.pop()
         
-
     def make_random_move(self):
         """
         Returns a move to make on the Minesweeper board.
