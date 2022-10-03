@@ -62,6 +62,7 @@ knowledge3 = And(
     Or(Biconditional(AKnight, AKnight), Biconditional(AKnight, AKnave))
 )
 
+
 def main():
     symbols = [AKnight, AKnave, BKnight, BKnave, CKnight, CKnave]
     puzzles = [
