@@ -142,7 +142,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     # Probability variable initalized to one to keep track of all changes
     probability = 1
 
-    # Dict that maps people to number of genes
+    # Dict that maps people to probability of passing down gene to child
     pass_rate = dict()
     for person in people:
         if person in one_gene:

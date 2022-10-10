@@ -157,7 +157,7 @@ def links_to_page(corpus, page):
     """
     Return list of pages in the corpus that contains links to given page
     """
-    answer =  []
+    answer = []
     for webpage in corpus:
         if page in corpus[webpage] or len(corpus[webpage]) == 0:
             answer.append(webpage)
