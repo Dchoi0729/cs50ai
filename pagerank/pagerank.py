@@ -8,8 +8,6 @@ SAMPLES = 10000
 
 
 def main():
-    #print(transition_model({"1.html": {"2.html", "3.html"}, "2.html": {}, "3.html": {"2.html"}}, "2.html", 0.85))
-    #print(links_to_page({"1.html": {"2.html", "3.html"}, "2.html": {}, "3.html": {"2.html"}}, "2.html"))
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
@@ -59,21 +57,22 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-
+    # Total number of pages, and the number of pages linked to in current page
     total_number, current_number = len(corpus), len(corpus[page])
     probability_distribution = dict()
 
-    # For all webpages in corpus, add probability of randomly getting there
-    for webpage in corpus:
-        if not current_number == 0:
+    # If current page contains link to other pages
+    if not current_number == 0:
+        # Probability of randomly arriving at a page through damping factor
+        for webpage in corpus:
             probability_distribution[webpage] = (1 - damping_factor) / total_number
-        else:
-            probability_distribution[webpage] = 1 / total_number
-
-    # For the webpages that the current page links to, add probability of getting there through link
-    for webpage in corpus[page]:
-        if not current_number == 0:
+        # Probability of arriving at page through links in current page
+        for webpage in corpus[page]:
             probability_distribution[webpage] += (damping_factor / current_number)
+    # If current page contains no link to other pages
+    else:
+        for webpage in corpus:
+            probability_distribution[webpage] = 1 / total_number
 
     return probability_distribution
 
@@ -88,28 +87,24 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
 
-    # Initialize counter dict with all the pages in corpus
-    counter = dict()
+    # Initialize pagerank dict with all the pages in corpus
+    page_rank = dict()
     for page in corpus:
-        counter[page] = 0
+        page_rank[page] = 0
 
     # First randomly choose a page
     curr_page = random.choice(list(corpus.keys()))
     
     # Iterate n times
     for i in range(n):
-        # Note that curr page has been visited
-        counter[curr_page] += 1
+        # Add to pagerank dict for given page
+        page_rank[curr_page] += (1 / n)
         
         # Based on the transition model, "go" to next page
         distribution = transition_model(corpus, curr_page, damping_factor)
         curr_page = random.choices(list(distribution.keys()), distribution.values())[0]
-    
-    # Normalize counter so that page rank adds up to 1
-    for page in counter:
-        counter[page] /= n
 
-    return counter
+    return page_rank
 
 
 def iterate_pagerank(corpus, damping_factor):
