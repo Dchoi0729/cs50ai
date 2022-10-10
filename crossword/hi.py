@@ -27,3 +27,9 @@ def z(value):
         return 0
 
 print(sorted(c, key=lambda x: (len(x), z(x))))
+
+a = 1
+if a > 2:
+    x = 2
+if a > 2:
+    print(x)

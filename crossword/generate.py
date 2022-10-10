@@ -151,7 +151,7 @@ class CrosswordCreator():
             for var1 in self.crossword.variables 
             for var2 in self.crossword.variables 
             if not var1 == var2
-            ] if arcs == None else arcs
+        ] if arcs == None else arcs
 
         while len(queue) > 0:
             x,y = queue.pop(0)
@@ -219,7 +219,6 @@ class CrosswordCreator():
 
         return sorted(self.domains[var], key=rule_out)
     
-
     def select_unassigned_variable(self, assignment):
         """
         Return an unassigned variable not already part of `assignment`.
@@ -237,7 +236,6 @@ class CrosswordCreator():
 
         return sorted_unassigned.pop(0)
 
-
     def backtrack(self, assignment):
         """
         Using Backtracking Search, take as input a partial assignment for the
@@ -250,16 +248,69 @@ class CrosswordCreator():
         if self.assignment_complete(assignment):
             return assignment
         var = self.select_unassigned_variable(assignment)
+        inference = None
         for value in self.order_domain_values(var, assignment):
             assignment[var] = value
+            self.domains[var] = {value}
             if self.consistent(assignment):
-                result = self.backtrack(assignment)
-                if not result == None:
-                    return result
+                inference = self.inference(var, assignment)
+                print(inference)
+                if not inference == None:
+                    assignment.update(inference)
+                    result = self.backtrack(assignment)
+                    if not result == None:
+                        return result
             del assignment[var]
+            if not inference == None:
+                for info in inference.keys():
+                    del assignment[info]
         return None
 
+    def inference(self, var, assignment):
+        """
+        Implements ac3 algorithm on given assignment of var to maintain arc consistency
 
+        Return a dict of assignments that can be inferred from given assigments;
+        return None if given assignment leads to no farther future progress
+        """
+        self.ac3([(other, var) for other in self.crossword.neighbors(var)])
+
+        # For variables that aren't yet assigned check if new inferences can be made
+        # aka a variable has only one value left in domain (add) or none left (abort)
+        new_inferences = dict()
+        for var in set(self.domains.keys()) - set(assignment.keys()):
+            if len(self.domains[var]) == 0:
+                return None
+            if len(self.domains[var]) == 1:
+                new_inferences[var] = list(self.domains[var])[0]
+        return new_inferences
+
+'''
+def ac3(self, arcs=None):
+        """
+        Update `self.domains` such that each variable is arc consistent.
+        If `arcs` is None, begin with initial list of all arcs in the problem.
+        Otherwise, use `arcs` as the initial list of arcs to make consistent.
+
+        Return True if arc consistency is enforced and no domains are empty;
+        return False if one or more domains end up empty.
+        """
+        queue = [
+            (var1,var2) 
+            for var1 in self.crossword.variables 
+            for var2 in self.crossword.variables 
+            if not var1 == var2
+        ] if arcs == None else arcs
+
+        while len(queue) > 0:
+            x,y = queue.pop(0)
+            if self.revise(x, y):
+                if len(self.domains[x]) == 0:
+                    return False
+                for z in self.crossword.neighbors(x) - {y}:
+                    queue.append((z,x))
+        return True
+'''
 def main():
 
     # Check usage
