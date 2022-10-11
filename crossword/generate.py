@@ -121,16 +121,13 @@ class CrosswordCreator():
             
         for x_word in self.domains[x].copy():
             consistent = False
-            if len(x_word) < overlaps[0] + 1:
-                continue
             x_char = x_word[overlaps[0]]
             for y_word in self.domains[y]:
-                if len(y_word) < overlaps[1] + 1:
-                    continue
                 y_char = y_word[overlaps[1]]
                 if x_char == y_char:
                     consistent = True
                     break
+            # No word in y's domain works with x_word
             if not consistent:
                 revised = True
                 self.domains[x].remove(x_word)
@@ -245,25 +242,28 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
+        # Assignment complete
         if self.assignment_complete(assignment):
             return assignment
         var = self.select_unassigned_variable(assignment)
-        inference = None
         for value in self.order_domain_values(var, assignment):
             assignment[var] = value
             self.domains[var] = {value}
             if self.consistent(assignment):
                 inference = self.inference(var, assignment)
-                print(inference)
                 if not inference == None:
                     assignment.update(inference)
                     result = self.backtrack(assignment)
                     if not result == None:
                         return result
+                    else:
+                        # Delete all the inferences added to assignment
+                        for inference_var in inference.keys():
+                            del assignment[inference_var]
+            # Assignment of value is wrong for var, delete assignemnt
             del assignment[var]
-            if not inference == None:
-                for info in inference.keys():
-                    del assignment[info]
+                
+        # Current var has no value in its domain that works
         return None
 
     def inference(self, var, assignment):
@@ -285,32 +285,7 @@ class CrosswordCreator():
                 new_inferences[var] = list(self.domains[var])[0]
         return new_inferences
 
-'''
-def ac3(self, arcs=None):
-        """
-        Update `self.domains` such that each variable is arc consistent.
-        If `arcs` is None, begin with initial list of all arcs in the problem.
-        Otherwise, use `arcs` as the initial list of arcs to make consistent.
 
-        Return True if arc consistency is enforced and no domains are empty;
-        return False if one or more domains end up empty.
-        """
-        queue = [
-            (var1,var2) 
-            for var1 in self.crossword.variables 
-            for var2 in self.crossword.variables 
-            if not var1 == var2
-        ] if arcs == None else arcs
-
-        while len(queue) > 0:
-            x,y = queue.pop(0)
-            if self.revise(x, y):
-                if len(self.domains[x]) == 0:
-                    return False
-                for z in self.crossword.neighbors(x) - {y}:
-                    queue.append((z,x))
-        return True
-'''
 def main():
 
     # Check usage
