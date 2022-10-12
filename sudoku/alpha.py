@@ -1,26 +1,24 @@
 from sudoku import *
+from generate import *
 import sys
 
 def main():
 
-    # Check usage
-    if len(sys.argv) != 3:
-        sys.exit("Usage: python generate.py structure output")
     
-    # Parse command-line arguments
-    structure = sys.argv[1]
-    output = sys.argv[2]
+    sudoku = Sudoku("structure.txt")
+    solver = SudokuSolver(sudoku)
+    print(sudoku.neighbors((1,3)))
+    print(solver.domains)
 
-    try:
-        sudoku = Sudoku(structure)
-    except ValueError as error:
-        print(error)
-        sys.exit(1)
+    queue = [
+        ((i1,j1),(i2,j2)) 
+        for i1 in range(9) for j1 in range(9)
+        for i2 in range(9) for j2 in range(9)
+        if not (i1 == i2 and j1 == j2)
+    ]
+    print(queue)
 
-    board = sudoku.board
 
-    for row in board:
-        print(row)
     
 if __name__ == "__main__":
     main()
