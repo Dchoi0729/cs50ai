@@ -7,9 +7,9 @@ class Sudoku():
             contents = f.read().splitlines()
             self.initial_board = []
             for i in range(len(contents)):
-                row = contents[i].split()
+                row = [*contents[i]]
                 self.initial_board.append(row)
-        
+
         # Convert all cells of the board to numbers
         # Check if structure is valid
         for row in self.initial_board:

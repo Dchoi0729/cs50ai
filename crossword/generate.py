@@ -114,7 +114,7 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        revised, overlaps = False, self.crossword.overlaps[x,y]
+        revised, overlaps = False, self.crossword.overlaps[x, y]
 
         if overlaps == None:
             return False
@@ -144,19 +144,19 @@ class CrosswordCreator():
         return False if one or more domains end up empty.
         """
         queue = [
-            (var1,var2) 
+            (var1, var2) 
             for var1 in self.crossword.variables 
             for var2 in self.crossword.variables 
             if not var1 == var2
         ] if arcs == None else arcs
 
         while len(queue) > 0:
-            x,y = queue.pop(0)
+            x, y = queue.pop(0)
             if self.revise(x, y):
                 if len(self.domains[x]) == 0:
                     return False
                 for z in self.crossword.neighbors(x) - {y}:
-                    queue.append((z,x))
+                    queue.append((z, x))
         return True
 
     def assignment_complete(self, assignment):
@@ -181,7 +181,7 @@ class CrosswordCreator():
             for other_var in assignment.keys():
                 if not var == other_var:
                     other_word = assignment[other_var]
-                    overlap = self.crossword.overlaps[var,other_var]
+                    overlap = self.crossword.overlaps[var, other_var]
                     if overlap == None:
                         continue
                     if not word[overlap[0]] == other_word[overlap[1]]:
@@ -205,7 +205,7 @@ class CrosswordCreator():
             counter = 0
             # For all neighboring variables not yet assigned a value
             for other in self.crossword.neighbors(var) - set(assignment.keys()):
-                overlap = self.crossword.overlaps[var,other]
+                overlap = self.crossword.overlaps[var, other]
                 var_letter = value[overlap[0]]
                 for other_value in self.domains[other]:
                     other_letter = other_value[overlap[1]]
@@ -228,7 +228,7 @@ class CrosswordCreator():
 
         sorted_unassigned = sorted(
             unassigned, 
-            key=lambda var:(len(self.domains[var]), -len(self.crossword.neighbors(var)))
+            key=lambda var: (len(self.domains[var]), -len(self.crossword.neighbors(var)))
         )
 
         return sorted_unassigned.pop(0)

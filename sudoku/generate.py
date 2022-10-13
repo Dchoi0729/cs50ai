@@ -1,3 +1,4 @@
+import copy
 from PIL import Image, ImageDraw, ImageFont
 from sudoku import Sudoku
 import sys
@@ -26,7 +27,7 @@ def main():
         print("No solution.")
     else:
         solver.save(solution, output)
-
+    
 
 class SudokuSolver():
     def __init__(self, sudoku):
@@ -63,6 +64,7 @@ class SudokuSolver():
         for i in range(9):
             for j in range(9):
                 number = solution[(i,j)]
+                color = "black" if self.sudoku.initial_board[i][j] != 0 else "blue"
                 
                 # Set offset to create borders seperating 3 by 3 squares
                 x_offset = 0 if i < 3 else 2 if i > 5 else 1
@@ -85,7 +87,7 @@ class SudokuSolver():
                 draw.text(
                     (rect[0][0] + ((interior_size - w) / 2),
                         rect[0][1] + ((interior_size - h) / 2) - 10),
-                    str(number), fill="black", font=font
+                    str(number), fill=color, font=font
                 )
 
         img.save(filename)
@@ -95,8 +97,14 @@ class SudokuSolver():
         Enforce arc consistency, and then solve the CSP.
         (node consistency is unnecessary)
         """
+
         self.ac3()
-        return self.backtrack(dict())
+        inital_assignment = {
+            (i, j) : self.domains[(i,j)][0]
+            for i in range(9) for j in range(9)
+            if len(self.domains[(i,j)]) == 1
+        }
+        return self.backtrack(inital_assignment)
 
     def revise(self, x, y):
         """
@@ -162,7 +170,6 @@ class SudokuSolver():
         Return True if `assignment` is consistent (i.e., no numbers
         violate sudoku rule); return False otherwise.
         """
-
         for var in assignment.keys():
             value = assignment[var]
             for other_var in assignment.keys():
@@ -179,7 +186,7 @@ class SudokuSolver():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        '''
+        
         def rule_out(value):
             """
             Return the number of values the given value for var can rule out
@@ -187,19 +194,13 @@ class SudokuSolver():
             """
             counter = 0
             # For all neighboring variables not yet assigned a value
-            for other in self.crossword.neighbors(var) - set(assignment.keys()):
-                overlap = self.crossword.overlaps[var,other]
-                var_letter = value[overlap[0]]
-                for other_value in self.domains[other]:
-                    other_letter = other_value[overlap[1]]
-                    if not var_letter == other_letter:
-                        counter += 1
+            for other in self.sudoku.neighbors(var) - set(assignment.keys()):
+                if value in self.domains[other]:
+                    counter += 1
                 
             return counter
 
         return sorted(self.domains[var], key=rule_out)
-        '''
-        return self.domains[var]
     
     def select_unassigned_variable(self, assignment):
         """
@@ -211,16 +212,14 @@ class SudokuSolver():
         """
         
         unassigned = set(self.domains.keys()) - set(assignment.keys())
-
-        '''
+        
         sorted_unassigned = sorted(
             unassigned, 
-            key=lambda var:(len(self.domains[var]), -len(self.crossword.neighbors(var)))
+            key=lambda var:(len(self.domains[var]))
         )
 
         return sorted_unassigned.pop(0)
-        '''
-        return unassigned.pop()
+
 
     def backtrack(self, assignment):
         """
@@ -231,29 +230,40 @@ class SudokuSolver():
 
         If no assignment is possible, return None.
         """
+        #print(self.domains[(2,2)])
+        print(assignment)
+
         # Assignment complete
         if self.assignment_complete(assignment):
             return assignment
         var = self.select_unassigned_variable(assignment)
+
+        prev_domain = copy.deepcopy(self.domains[var])
         for value in self.order_domain_values(var, assignment):
             assignment[var] = value
-            self.domains[var] = {value}
             if self.consistent(assignment):
+                self.domains[var] = [value]
                 inference = self.inference(var, assignment)
                 if not inference == None:
                     assignment.update(inference)
-                    result = self.backtrack(assignment)
-                    if not result == None:
-                        return result
-                    else:
-                        # Delete all the inferences added to assignment
-                        for inference_var in inference.keys():
-                            del assignment[inference_var]
+                
+                result = self.backtrack(assignment)
+                if not result == None:
+                    return result
+                
+                elif not inference == None:
+                    # Delete all the inferences added to assignment
+                    for inference_var in inference.keys():
+                        del assignment[inference_var]
+                
             # Assignment of value is wrong for var, delete assignemnt
             del assignment[var]
-                
+            self.domains[var] = prev_domain
+        
         # Current var has no value in its domain that works
         return None
+
+#https://github.com/melvinkokxw/cs50-ai-projects/blob/master/project3/crossword/generate.py
 
     def inference(self, var, assignment):
         """
@@ -262,6 +272,7 @@ class SudokuSolver():
         Return a dict of assignments that can be inferred from given assigments;
         return None if given assignment leads to no farther future progress
         """
+
         self.ac3([(other, var) for other in self.sudoku.neighbors(var)])
 
         # For variables that aren't yet assigned check if new inferences can be made
