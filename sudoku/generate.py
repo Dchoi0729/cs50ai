@@ -1,14 +1,16 @@
 import argparse
 import copy
+import sys
+import time
+
 from PIL import Image, ImageDraw, ImageFont
 from sudoku import Sudoku
-import sys
+
 
 def main():
-
-    # Create command line parser that can details usage
+    # Create command line parser that can detail usage
     parser = argparse.ArgumentParser(description="Program Usage",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-l", "--log", action="store_true", help="show log of all backtrack search")
     parser.add_argument("-c", "--compare", action="store_true", help="prints initial sudokuboard next to answer")
     parser.add_argument("src", help="Source file of inital sudoku configuration")
@@ -18,6 +20,8 @@ def main():
     config = vars(parser.parse_args())
     structure = config["src"]
     output = f"./solutions/{config['output']}.png"
+    show_log = config["log"]
+    show_init = config["compare"]
 
     # Generate sudoku based on structure
     try:
@@ -27,14 +31,24 @@ def main():
         sys.exit(1)
     
     # Create sudoku solver with given tags
-    solver = SudokuSolver(sudoku, show_log=config["log"], show_init=config["compare"])
-    solution = solver.solve()
+    solver = SudokuSolver(sudoku, show_log=show_log, show_init=show_init)
+    
+    # Solve sudoku, adding decorator if log print is requested
+    if show_log:
+        solution = measure_time(solver.solve)()
+    else:
+        solution = solver.solve()
 
     # Print result
     if solution is None:
         print("No solution.")
     else:
         solver.save(solution, output)
+    
+    # Print log details
+    if show_log:
+        print(f"Backtrack function count: {solver.backtrack_counter}")
+        print(f"Numbers tested: {solver.numers_tested}")
 
 
 class SudokuSolver():
@@ -52,12 +66,13 @@ class SudokuSolver():
         }
         self.show_log = show_log
         self.show_init = show_init
+        self.backtrack_counter = 0
+        self.numers_tested = 0
 
     def print(self, assignment):
         """
         Print sudoku assignment to the terminal.
         """
-        print("*********************")
         for i in range(self.sudoku.SIZE):
             for j in range(self.sudoku.SIZE):
                 if (i,j) in assignment.keys():
@@ -67,9 +82,9 @@ class SudokuSolver():
                         print(f"{assignment[(i,j)]} ", end="")
                 else:
                     if j == 8:
-                        print("? ")
+                        print("  ")
                     else:
-                        print("? ", end="")
+                        print("  ", end="")
                 if j == 2 or j == 5:
                     print("| ", end="")
             if i == 2 or i == 5:
@@ -243,13 +258,11 @@ class SudokuSolver():
         """
         Return a list of values in the domain of `var`, in order by
         the number of values they rule out for neighboring variables.
-        The first value in the list, for example, should be the one
-        that rules out the fewest values among the neighbors of `var`.
         """
         
         def rule_out(value):
             """
-            Return the number of values the given value for var can rule out
+            Return the number of values a given value for var can rule out
             for neighboring variables
             """
             counter = 0
@@ -266,9 +279,7 @@ class SudokuSolver():
         """
         Return an unassigned variable not already part of `assignment`.
         Choose the variable with the minimum number of remaining values
-        in its domain. If there is a tie, choose the variable with the highest
-        degree. If there is a tie, any of the tied variables are acceptable
-        return values.
+        in its domain. 
         """
         
         unassigned = set(self.domains.keys()) - set(assignment.keys())
@@ -280,7 +291,6 @@ class SudokuSolver():
 
         return sorted_unassigned.pop(0)
 
-
     def backtrack(self, assignment):
         """
         Using Backtracking Search, take as input a partial assignment for the
@@ -290,6 +300,8 @@ class SudokuSolver():
 
         If no assignment is possible, return None.
         """
+
+        self.backtrack_counter += 1
         
         # Assignment complete
         if self.assignment_complete(assignment):
@@ -297,9 +309,13 @@ class SudokuSolver():
 
         var = self.select_unassigned_variable(assignment)
         for value in self.order_domain_values(var, assignment):
-            if self.show_log:
-                self.print(assignment)
+            self.numers_tested += 1
             assignment[var] = value
+            if self.show_log:
+                print("***********************")
+                print(f"{var} : {value}")
+                print()
+                self.print(assignment)
             if self.consistent(assignment):
                 prev_domain = copy.deepcopy(self.domains)
                 self.domains[var] = [value]
@@ -340,6 +356,19 @@ class SudokuSolver():
             if len(self.domains[var]) == 1:
                 new_inferences[var] = list(self.domains[var])[0]
         return new_inferences
+
+
+def measure_time(func):
+    '''Decorator that reports the execution time.'''
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+          
+        print(f"Time to solve: {end-start} seconds")
+        return result
+
+    return wrapper
 
 
 if __name__ == "__main__":
