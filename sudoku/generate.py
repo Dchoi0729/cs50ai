@@ -1,17 +1,24 @@
+import argparse
 import copy
 from PIL import Image, ImageDraw, ImageFont
 from sudoku import Sudoku
 import sys
 
 def main():
-    # Check usage
-    if len(sys.argv) != 3:
-        sys.exit("Usage: python generate.py structure.txt output.png")
+
+    # Create command line parser that can details usage
+    parser = argparse.ArgumentParser(description="Program Usage",
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-l", "--log", action="store_true", help="show log of all backtrack search")
+    parser.add_argument("-c", "--compare", action="store_true", help="prints initial sudokuboard next to answer")
+    parser.add_argument("src", help="Source file of inital sudoku configuration")
+    parser.add_argument("output", help="Name of output png file (stored in solutions dir)")
     
-    # Parse command-line arguments
-    structure = sys.argv[1]
-    output = sys.argv[2]
-    
+    # Load command line data
+    config = vars(parser.parse_args())
+    structure = config["src"]
+    output = f"./solutions/{config['output']}.png"
+
     # Generate sudoku based on structure
     try:
         sudoku = Sudoku(structure)
@@ -19,7 +26,8 @@ def main():
         print(error)
         sys.exit(1)
     
-    solver = SudokuSolver(sudoku)
+    # Create sudoku solver with given tags
+    solver = SudokuSolver(sudoku, show_log=config["log"], show_init=config["compare"])
     solution = solver.solve()
 
     # Print result
@@ -27,10 +35,10 @@ def main():
         print("No solution.")
     else:
         solver.save(solution, output)
-    
+
 
 class SudokuSolver():
-    def __init__(self, sudoku):
+    def __init__(self, sudoku, show_log=False, show_init=False):
         """
         Create new CSP sudoku solver.
         """
@@ -42,41 +50,93 @@ class SudokuSolver():
             )
             for i in range(9) for j in range(9)
         }
-    
+        self.show_log = show_log
+        self.show_init = show_init
+
+    def print(self, assignment):
+        """
+        Print sudoku assignment to the terminal.
+        """
+        print("*********************")
+        for i in range(self.sudoku.SIZE):
+            for j in range(self.sudoku.SIZE):
+                if (i,j) in assignment.keys():
+                    if j == 8:
+                        print(f"{assignment[(i,j)]} ")
+                    else:
+                        print(f"{assignment[(i,j)]} ", end="")
+                else:
+                    if j == 8:
+                        print("? ")
+                    else:
+                        print("? ", end="")
+                if j == 2 or j == 5:
+                    print("| ", end="")
+            if i == 2 or i == 5:
+                print("----------------------")
+
     def save(self, solution, filename):
         """
         Save finished sudoku to an image file.
+        If show_init is true, prints intial configuration 
+        side by side with the solution
         """
-        cell_size = 100
-        cell_border = 2
-        gap = 5
+        cell_size, cell_border = 100, 2
         interior_size = cell_size - 2 * cell_border
+        gap, divider = 5, 10
+        canvas_width = (9 * cell_size + 2 * gap if not self.show_init 
+                        else 2 * (9 * cell_size + 2 * gap) + divider)
 
         # Create a blank canvas
         img = Image.new(
             "RGBA",
-            (9 * cell_size + 2 * gap, 9 * cell_size + 2 * gap),
+            (canvas_width, 9 * cell_size + 2 * gap),
             "black"
         )
         font = ImageFont.truetype("assets/fonts/OpenSans-Regular.ttf", 80)
         draw = ImageDraw.Draw(img)
 
+        offset = 9 * cell_size + 2 * gap + divider if self.show_init else 0
+
         for i in range(9):
             for j in range(9):
-                number = solution[(i,j)]
-                color = "black" if self.sudoku.initial_board[i][j] != 0 else "blue"
-                
                 # Set offset to create borders seperating 3 by 3 squares
                 x_offset = 0 if i < 3 else 2 if i > 5 else 1
                 y_offset = 0 if j < 3 else 2 if j > 5 else 1
 
+                if self.show_init:
+                    rect = [
+                        (j * cell_size + cell_border + y_offset * gap,
+                            i * cell_size + cell_border + x_offset * gap),
+                        ((j + 1) * cell_size - cell_border + y_offset * gap,
+                            (i + 1) * cell_size - cell_border + x_offset * gap)
+                    ]
+                    number = self.sudoku.initial_board[i][j]
+
+                    # Draw rectangular cell for the number
+                    draw.rectangle(rect, fill="white")
+
+                    # Store size of number in w, h
+                    no, need, w, h = draw.textbbox((0,0), str(number), font=font)
+
+                    # Draw number centered in cell
+                    if number != 0:
+                        draw.text(
+                            (rect[0][0] + ((interior_size - w) / 2),
+                                rect[0][1] + ((interior_size - h) / 2) - 10),
+                            str(number), fill="black", font=font
+                        )
+                
+                number = solution[(i,j)]
+                color = "black" if self.sudoku.initial_board[i][j] != 0 else "blue"
+                
                 rect = [
-                    (j * cell_size + cell_border + y_offset * gap,
+                    (j * cell_size + cell_border + y_offset * gap + offset,
                         i * cell_size + cell_border + x_offset * gap),
-                    ((j + 1) * cell_size - cell_border + y_offset * gap,
+                    ((j + 1) * cell_size - cell_border + y_offset * gap + offset,
                         (i + 1) * cell_size - cell_border + x_offset * gap)
                 ]
-                
+
                 # Draw rectangular cell for the number
                 draw.rectangle(rect, fill="white")
 
@@ -230,40 +290,36 @@ class SudokuSolver():
 
         If no assignment is possible, return None.
         """
-        #print(self.domains[(2,2)])
-        print(assignment)
-
+        
         # Assignment complete
         if self.assignment_complete(assignment):
             return assignment
-        var = self.select_unassigned_variable(assignment)
 
-        prev_domain = copy.deepcopy(self.domains[var])
+        var = self.select_unassigned_variable(assignment)
         for value in self.order_domain_values(var, assignment):
+            if self.show_log:
+                self.print(assignment)
             assignment[var] = value
             if self.consistent(assignment):
+                prev_domain = copy.deepcopy(self.domains)
                 self.domains[var] = [value]
                 inference = self.inference(var, assignment)
-                if not inference == None:
+                if inference != None:
                     assignment.update(inference)
-                
                 result = self.backtrack(assignment)
-                if not result == None:
+                if result != None:
                     return result
-                
-                elif not inference == None:
+                if inference != None:
                     # Delete all the inferences added to assignment
                     for inference_var in inference.keys():
                         del assignment[inference_var]
                 
             # Assignment of value is wrong for var, delete assignemnt
             del assignment[var]
-            self.domains[var] = prev_domain
+            self.domains = prev_domain
         
         # Current var has no value in its domain that works
         return None
-
-#https://github.com/melvinkokxw/cs50-ai-projects/blob/master/project3/crossword/generate.py
 
     def inference(self, var, assignment):
         """
