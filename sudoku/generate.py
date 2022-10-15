@@ -1,8 +1,8 @@
 import argparse
-import copy
 import sys
 import time
 
+from copy import deepcopy
 from PIL import Image, ImageDraw, ImageFont
 from sudoku import Sudoku
 
@@ -313,18 +313,18 @@ class SudokuSolver():
                 print()
                 self.print(assignment)
             if self.consistent(assignment):
-                prev_domain = copy.deepcopy(self.domains)
+                prev_domain = deepcopy(self.domains)
                 self.domains[var] = [value]
                 inference = self.inference(var, assignment)
                 if inference is not None:
                     assignment.update(inference)
-                result = self.backtrack(assignment)
-                if result is not None:
-                    return result
-                if inference is not None:
-                    # Delete all the inferences added to assignment
-                    for inference_var in inference:
-                        del assignment[inference_var]
+                    result = self.backtrack(assignment)
+                    if result is not None:
+                        return result
+                    if inference is not None:
+                        # Delete all the inferences added to assignment
+                        for inference_var in inference:
+                            del assignment[inference_var]
 
             # Assignment of value is wrong for var, delete assignemnt
             del assignment[var]

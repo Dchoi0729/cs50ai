@@ -1,7 +1,7 @@
 import sys
 
+from copy import deepcopy
 from crossword import *
-
 
 class CrosswordCreator():
 
@@ -248,10 +248,11 @@ class CrosswordCreator():
         var = self.select_unassigned_variable(assignment)
         for value in self.order_domain_values(var, assignment):
             assignment[var] = value
-            self.domains[var] = {value}
             if self.consistent(assignment):
+                prev_domain = deepcopy(self.domains)
+                self.domains[var] = {value}
                 inference = self.inference(var, assignment)
-                if not inference == None:
+                if inference is not None:
                     assignment.update(inference)
                     result = self.backtrack(assignment)
                     if not result == None:
