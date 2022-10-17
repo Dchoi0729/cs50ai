@@ -166,6 +166,7 @@ class NimAI():
 
         return max_action if max_action is not None else random.choice(list(available_actions))
 
+
 def train(n):
     """
     Train an AI by playing `n` games against itself.
