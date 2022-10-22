@@ -2,8 +2,6 @@ import cv2
 import numpy as np
 import os
 import sys
-from keras.layers import *
-from keras.models import *
 import tensorflow as tf
 
 from sklearn.model_selection import train_test_split
@@ -87,18 +85,22 @@ def get_model():
 
         # Convolutional layer. Learn 32 filters using a 3x3 kernel
         tf.keras.layers.Conv2D(
-            32, (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
+            32, (5, 5), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
         ),
 
         # Max-pooling layer, using 2x2 pool size
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
+        # Convolutional layer. Learn 32 filters using a 3x3 kernel
+        tf.keras.layers.Conv2D(
+            64, (3, 3), activation="relu"),
+
         # Flatten units
         tf.keras.layers.Flatten(),
 
         # Add a hidden layer with dropout
-        tf.keras.layers.Dense(128, activation="relu"),
-        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(2048, activation="relu"),
+        tf.keras.layers.Dropout(0.2),
 
         # Add an output layer with output units for all categories
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
