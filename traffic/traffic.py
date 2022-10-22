@@ -59,7 +59,7 @@ def load_data(data_dir):
     corresponding `images`.
     """
     
-    images, labels = [],[]
+    images, labels = [], []
     curr_path = os.path.dirname(os.path.realpath(__file__))
 
     for i in range(NUM_CATEGORIES):
@@ -70,7 +70,7 @@ def load_data(data_dir):
             images.append(resized)
             labels.append(i)
     
-    return (images,labels)
+    return (images, labels)
 
 
 def get_model():
@@ -83,7 +83,7 @@ def get_model():
     # Create a convolutional neural network
     model = tf.keras.models.Sequential([
 
-        # Convolutional layer. Learn 32 filters using a 3x3 kernel
+        # Convolutional layer. Learn 32 filters using a 5x5 kernel
         tf.keras.layers.Conv2D(
             32, (5, 5), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
         ),
@@ -91,7 +91,7 @@ def get_model():
         # Max-pooling layer, using 2x2 pool size
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
-        # Convolutional layer. Learn 32 filters using a 3x3 kernel
+        # Convolutional layer. Learn 64 filters using a 3x3 kernel
         tf.keras.layers.Conv2D(
             64, (3, 3), activation="relu"),
 
