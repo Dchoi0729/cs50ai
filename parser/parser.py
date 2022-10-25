@@ -18,7 +18,9 @@ V -> "smiled" | "tell" | "were"
 """
 
 NONTERMINALS = """
-S -> N V
+S -> NP VP | S Conj S | VP
+NP -> N | N NP | Det NP | P NP | Adj NP | NP Adv
+VP -> V | V NP | Adv VP | VP Adv
 """
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
@@ -66,7 +68,7 @@ def preprocess(sentence):
     character.
     """
     list_of_words = [
-        word for word in word_tokenize(sentence) 
+        word.lower() for word in word_tokenize(sentence) 
         if re.search('[a-zA-Z]', word) != None
     ]
     
