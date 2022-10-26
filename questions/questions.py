@@ -75,7 +75,7 @@ def tokenize(document):
     """
     lower_cased = [
         word.lower() for word in word_tokenize(document)
-        if word not in string.punctuation and re.search('[a-zA-Z]', word) != None
+        if re.search('[a-zA-Z]', word) != None
     ]
 
     non_trivial = filter(lambda word: word not in nltk.corpus.stopwords.words("english"), lower_cased)
