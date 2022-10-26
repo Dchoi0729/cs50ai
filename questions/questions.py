@@ -1,9 +1,15 @@
 import nltk
+import string
 import sys
+import regex as re
+import os
+
+from nltk.tokenize import word_tokenize
 
 FILE_MATCHES = 1
 SENTENCE_MATCHES = 1
 
+nltk.download('stopwords')
 
 def main():
 
@@ -48,7 +54,15 @@ def load_files(directory):
     Given a directory name, return a dictionary mapping the filename of each
     `.txt` file inside that directory to the file's contents as a string.
     """
-    raise NotImplementedError
+    files = dict()
+
+    curr_path = os.path.dirname(os.path.realpath(__file__))
+    for document in os.listdir(os.path.join(curr_path,directory)):
+        full_path = os.path.join(directory, document)
+        with open(full_path, encoding="utf-8") as f:
+            files[document] = f.read()
+
+    return files
 
 
 def tokenize(document):
@@ -59,7 +73,14 @@ def tokenize(document):
     Process document by coverting all words to lowercase, and removing any
     punctuation or English stopwords.
     """
-    raise NotImplementedError
+    lower_cased = [
+        word.lower() for word in word_tokenize(document)
+        if word not in string.punctuation and re.search('[a-zA-Z]', word) != None
+    ]
+
+    non_trivial = filter(lambda word: word not in nltk.corpus.stopwords.words("english"), lower_cased)
+
+    return list(non_trivial)
 
 
 def compute_idfs(documents):
