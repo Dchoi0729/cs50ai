@@ -1,14 +1,17 @@
 import nltk
+import numpy as np
 import string
 import sys
 import regex as re
 import os
 
+from collections import Counter
 from nltk.tokenize import word_tokenize
 
-FILE_MATCHES = 1
+FILE_MATCHES = 5
 SENTENCE_MATCHES = 1
 
+nltk.download('punkt')
 nltk.download('stopwords')
 
 def main():
@@ -91,7 +94,23 @@ def compute_idfs(documents):
     Any word that appears in at least one of the documents should be in the
     resulting dictionary.
     """
-    raise NotImplementedError
+
+    total_doc = len(documents)
+    idfs, words = dict(), set()
+
+    for document in documents:
+        for word in documents[document]:
+            words.add(word)
+    
+    for word in words:
+        counter = 0
+        for document in documents:
+            if word in documents[document]:
+                counter += 1
+        idfs[word] = np.log(total_doc/counter)
+
+    return idfs
+            
 
 
 def top_files(query, files, idfs, n):
@@ -101,7 +120,15 @@ def top_files(query, files, idfs, n):
     to their IDF values), return a list of the filenames of the the `n` top
     files that match the query, ranked according to tf-idf.
     """
-    raise NotImplementedError
+    def rank_files(file):
+        sum = 0
+        for word in query:
+            if word not in files[file]:
+                continue
+            sum += (files[file].count(word) * idfs[word])
+        return sum
+    
+    return sorted(list(files), key=rank_files, reverse=True)[0:n]
 
 
 def top_sentences(query, sentences, idfs, n):
@@ -112,8 +139,29 @@ def top_sentences(query, sentences, idfs, n):
     the query, ranked according to idf. If there are ties, preference should
     be given to sentences that have a higher query term density.
     """
-    raise NotImplementedError
+    def idf(sentence):
+        sum = 0
+        for word in query:
+            if word in sentence:
+                sum += idfs[word]
+        return sum
 
+    def query_term_density(sentence):
+        counter = 0
+        for word in sentence:
+            if word in query:
+                counter += 1
+        return counter / len(sentence)
+
+    ranked_sentences = [key for key,item in sorted(
+        sentences.items(),
+        key=lambda x: (idf(x[1]),query_term_density(x[1])),
+        reverse=True
+    )]
+    
+    return ranked_sentences[0:n]
+    
+    
 
 if __name__ == "__main__":
     main()

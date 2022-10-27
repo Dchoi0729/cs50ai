@@ -1,9 +1,7 @@
 from questions import *
 import string
+import numpy as np
 
+a = {"a":1,"b":3,"c":2}
 
-
-print(string.ascii_letters)
-print(word_tokenize("hello there i am daniel's gf"))
-print(nltk.corpus.stopwords.words("english"))
-print("I" in nltk.corpus.stopwords.words("english"))
+print(sorted(a.values(),key=lambda x:x))
