@@ -11,8 +11,10 @@ from nltk.tokenize import word_tokenize
 FILE_MATCHES = 5
 SENTENCE_MATCHES = 1
 
+
 nltk.download('punkt')
 nltk.download('stopwords')
+
 
 def main():
 
@@ -76,11 +78,13 @@ def tokenize(document):
     Process document by coverting all words to lowercase, and removing any
     punctuation or English stopwords.
     """
+    # Get a list of lowered cased words that contain at least one alphabet
     lower_cased = [
         word.lower() for word in word_tokenize(document)
         if re.search('[a-zA-Z]', word) != None
     ]
 
+    # Filter out trivial words
     non_trivial = filter(lambda word: word not in nltk.corpus.stopwords.words("english"), lower_cased)
 
     return list(non_trivial)
@@ -96,22 +100,19 @@ def compute_idfs(documents):
     """
 
     total_doc = len(documents)
-    idfs, words = dict(), set()
-
-    for document in documents:
-        for word in documents[document]:
-            words.add(word)
+    idfs = dict()
+    words = set(sum(documents.values(), []))
     
     for word in words:
         counter = 0
         for document in documents:
             if word in documents[document]:
                 counter += 1
+        # idf = ln(total doc/number of doc containing word)
         idfs[word] = np.log(total_doc/counter)
 
     return idfs
             
-
 
 def top_files(query, files, idfs, n):
     """
@@ -120,7 +121,10 @@ def top_files(query, files, idfs, n):
     to their IDF values), return a list of the filenames of the the `n` top
     files that match the query, ranked according to tf-idf.
     """
-    def rank_files(file):
+    def tf_idf(file):
+        """
+        Return tf-idf value of given file within a corpus of files
+        """
         sum = 0
         for word in query:
             if word not in files[file]:
@@ -128,7 +132,7 @@ def top_files(query, files, idfs, n):
             sum += (files[file].count(word) * idfs[word])
         return sum
     
-    return sorted(list(files), key=rank_files, reverse=True)[0:n]
+    return sorted(list(files), key=tf_idf, reverse=True)[0:n]
 
 
 def top_sentences(query, sentences, idfs, n):
@@ -140,6 +144,10 @@ def top_sentences(query, sentences, idfs, n):
     be given to sentences that have a higher query term density.
     """
     def idf(sentence):
+        """
+        Return the idf value of a sentence, which is the sum of
+        the idf value for query words in sentence
+        """
         sum = 0
         for word in query:
             if word in sentence:
@@ -147,21 +155,25 @@ def top_sentences(query, sentences, idfs, n):
         return sum
 
     def query_term_density(sentence):
+        """
+        Return the query_term_density value for a sentence, which is
+        the number of query words divided by length of sentence
+        """
         counter = 0
         for word in sentence:
             if word in query:
                 counter += 1
         return counter / len(sentence)
 
-    ranked_sentences = [key for key,item in sorted(
-        sentences.items(),
-        key=lambda x: (idf(x[1]),query_term_density(x[1])),
+    # Sort sentences first using idf, then query term density
+    ranked_sentences = sorted(
+        sentences,
+        key=lambda x: (idf(sentences[x]), query_term_density(sentences[x])),
         reverse=True
-    )]
+    )
     
     return ranked_sentences[0:n]
     
     
-
 if __name__ == "__main__":
     main()
